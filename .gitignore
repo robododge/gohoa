@@ -1,0 +1,2 @@
+cmd/jsondir/cleaner
+cmd/jsondir/*.json
