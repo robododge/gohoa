@@ -1,10 +1,14 @@
 package main
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/robododge/gohoa"
+)
 
 func Test_populateStreetDetails(t *testing.T) {
 	type args struct {
-		member       *Member
+		member       *gohoa.Member
 		resultNumber int
 		resultStName string
 	}
@@ -15,7 +19,7 @@ func Test_populateStreetDetails(t *testing.T) {
 		{
 			name: "Space before streed num",
 			args: args{
-				member:       &Member{PAddress: PropertyAddress{Addr1: " 4573 Thorny Court"}, Contacts: []Contact{{RoleName: "Owner", FirstName: "David", LastName: "Louve"}}},
+				member:       &gohoa.Member{PAddress: gohoa.PropertyAddress{Addr1: " 4573 Thorny Court"}, Contacts: []gohoa.Contact{{RoleName: "Owner", FirstName: "David", LastName: "Louve"}}},
 				resultNumber: 4573,
 				resultStName: "Thorny",
 			},
@@ -23,16 +27,11 @@ func Test_populateStreetDetails(t *testing.T) {
 		{
 			name: "Double space in name",
 			args: args{
-				member:       &Member{PAddress: PropertyAddress{Addr1: " 4577  Lancey"}, Contacts: []Contact{{RoleName: "Owner", FirstName: "David", LastName: "Louve"}}},
+				member:       &gohoa.Member{PAddress: gohoa.PropertyAddress{Addr1: " 4577  Lancey"}, Contacts: []gohoa.Contact{{RoleName: "Owner", FirstName: "David", LastName: "Louve"}}},
 				resultNumber: 4577,
 				resultStName: "Lancey",
 			},
 		},
-
-		// {"prop_address":{"addr1":"4573  Lancelot","StreetName":" Lancelot","Number":4573},"contact":[{"role_name":"Owner","fname":"Jayme","lname":"Parks"},{"role_name":"Owner","fname":"Michael","lname":"Parks"}]},
-
-		//{"prop_address":{"addr1":" 4573 Turnberry Court","StreetName":"4573 Turnberry","Number":4513},"contact":[{"role_name":"Owner","fname":"David","lname":"Lindberg"},{"role_name":"Owner","fname":"Rose","lname":"Lindberg"}]}
-
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

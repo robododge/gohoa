@@ -3,25 +3,48 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"log"
 	"os"
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/robododge/gohoa"
+
+	"github.com/brianvoe/gofakeit/v6"
 )
 
 var (
-	suffixes  = []string{"Street", "Court", "Drive", "Circle", "Trail", "Way"}
-	suffixabb = []string{"st", "ct", "dr", "tr"}
+	suffixes  = [...]string{"Street", "Court", "Drive", "Circle", "Trail", "Way"}
+	suffixabb = [...]string{"st", "ct", "dr", "tr"}
+)
+
+const (
+	JSON_SLIM_MEMBERS = "slim_members.json"
+	JSON_SLIM_ANON    = "slim_members_anon.json"
+	HOA_FILE          = "hoa_dir.json"
 )
 
 func main() {
+	var anonymizeMode bool
+	flag.BoolVar(&anonymizeMode, "anonymize", false, "Enable anonymizer mode")
+	flag.Parse()
+	if anonymizeMode {
+		fmt.Println("Running in anonymizer mode")
+		runAnonimization()
+	} else {
+		runCleaner()
+	}
+}
+
+func runCleaner() {
 
 	fmt.Println(" HOA directory cleaner")
-	jsonFile, err := os.Open("hoa_dir.json")
+	jsonFile, err := os.Open(HOA_FILE)
 	if err != nil {
-		log.Fatal("cannot open hoa_dir.json")
+		log.Fatal("cannot open ", HOA_FILE)
 	}
 	defer jsonFile.Close()
 
@@ -62,30 +85,9 @@ func main() {
 
 }
 
-type Contact struct {
-	RoleName  string `json:"role_name"`
-	FirstName string `json:"fname"`
-	LastName  string `json:"lname"`
-}
-
-type PropertyAddress struct {
-	Addr1      string `json:"addr1"`
-	StreetName string `json:",omitempty"`
-	Number     int    `json:",omitempty"`
-}
-
-type Member struct {
-	PAddress PropertyAddress `json:"prop_address"`
-	Contacts []Contact       `json:"contact"`
-}
-
-type AllMembers struct {
-	Members []Member
-}
-
 func stripNameAddress(dec *json.Decoder) {
 
-	f, err := os.Create("slim_members.json")
+	f, err := os.Create(JSON_SLIM_MEMBERS)
 	if err != nil {
 		log.Fatal("Cannot open file for writing members")
 	}
@@ -96,7 +98,7 @@ func stripNameAddress(dec *json.Decoder) {
 		fmt.Println(newErr)
 	}
 
-	member := &Member{}
+	member := &gohoa.Member{}
 	mi := 0
 	for {
 		err := dec.Decode(member)
@@ -125,35 +127,15 @@ func stripNameAddress(dec *json.Decoder) {
 
 }
 
-func populateStreetDetails(member *Member) {
+func populateStreetDetails(member *gohoa.Member) {
 
 	cleanAddr := strings.TrimSpace(member.PAddress.Addr1)
 	splits := strings.Fields(cleanAddr)
-	// for i, sp := range splits {
-	// 	if i == 0 {
-	// 	if sval, err := strconv.ParseInt(sp, 10, 16); err == nil {
-	// 		member.PAddress.Number = int(sval)
-	// 	} else {
-	// 		member.PAddress.StreetName = fmt.Sprintf("%s %s")
-
-	// 	}
-
-	// }
-
-	//Makesure to handle the case where mulitple spaces exist
-	// var lSplits []string
-	// for _, sraw := range splits {
-	// 	if sraw != " " {
-	// 		lSplits = append(lSplits, sraw)
-	// 	}
-	// }
 
 	if len(splits) >= 2 {
 
 		member.PAddress.Number = parseStreetNum(splits[0], member)
 
-		// s1, s2 := strings.TrimSpace(splits[1]), strings.TrimSpace(splits[2])
-		// s1, s2 := splits[1], splits[2]
 		if len(splits) > 2 && notSuffix(splits[2]) {
 			member.PAddress.StreetName = fmt.Sprintf("%s %s", splits[1], splits[2])
 		} else {
@@ -163,7 +145,7 @@ func populateStreetDetails(member *Member) {
 
 }
 
-func parseStreetNum(snum string, member *Member) int {
+func parseStreetNum(snum string, member *gohoa.Member) int {
 	if sval, err := strconv.ParseInt(snum, 10, 16); err == nil {
 		return int(sval)
 	} else {
@@ -174,7 +156,8 @@ func parseStreetNum(snum string, member *Member) int {
 
 func notSuffix(val string) bool {
 
-	found := slices.Contains(suffixes, val)
+	sliceSuffix := suffixes[:]
+	found := slices.Contains(sliceSuffix, val)
 
 	if !found {
 		lval := strings.ToLower(val)
@@ -188,7 +171,7 @@ func notSuffix(val string) bool {
 	return !found
 }
 
-func writeEntry(file *os.File, m Member) {
+func writeEntry(file *os.File, m gohoa.Member) {
 	if b, err := json.Marshal(m); err == nil {
 		file.Write(b)
 	}
@@ -196,5 +179,52 @@ func writeEntry(file *os.File, m Member) {
 func writeSimple(file *os.File, s string) error {
 	_, err := file.Write([]byte(s))
 	return err
+}
 
+func runAnonimization() {
+	gofakeit.Seed(0)
+	allMembers := gohoa.NewAllMembers()
+	allMembers.PopulateFromJsonFile(JSON_SLIM_MEMBERS)
+
+	hundredMemebers := allMembers.Members[:100]
+
+	streetName := fmt.Sprintf("%s %s", gofakeit.StreetName(), gofakeit.StreetSuffix())
+	streetNum := 1
+	for i := range hundredMemebers {
+		if streetNum%10 == 0 { //every 10th member, change the street
+			streetName = fmt.Sprintf("%s %s", gofakeit.StreetName(), gofakeit.StreetSuffix())
+			streetNum = streetNum + 1000
+		}
+		hundredMemebers[i].PAddress.Number = streetNum
+		hundredMemebers[i].PAddress.StreetName = streetName
+		hundredMemebers[i].PAddress.Addr1 = fmt.Sprintf("%d %s", streetNum, streetName)
+		fakeLastName := gofakeit.LastName()
+		for j := range hundredMemebers[i].Contacts {
+			fakeFirstName := gofakeit.FirstName()
+			hundredMemebers[i].Contacts[j].FirstName = fakeFirstName
+			hundredMemebers[i].Contacts[j].LastName = fakeLastName
+		}
+
+		streetNum++
+	}
+
+	//sart the writing proceess
+	f, err := os.Create(JSON_SLIM_ANON)
+	if err != nil {
+		log.Fatal("Cannot open file for writing anonymous members")
+	}
+	defer f.Close()
+	err = writeSimple(f, "[")
+	if err != nil {
+		log.Fatal("Cannot write to anonymous members file")
+	}
+
+	for mi, member := range hundredMemebers {
+		if mi > 0 {
+			_ = writeSimple(f, ",\n")
+		}
+		fmt.Println(member)
+		writeEntry(f, member)
+	}
+	_ = writeSimple(f, "]")
 }

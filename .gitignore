@@ -1,2 +1,6 @@
 cmd/jsondir/cleaner
 cmd/jsondir/*.json
+cmd/addr/*.csv
+cmd/addr/*.json
+cmd/addr/queries.go
+launch.json
