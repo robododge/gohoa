@@ -1,6 +1,6 @@
-cmd/jsondir/cleaner
-cmd/jsondir/*.json
-cmd/addr/*.csv
-cmd/addr/*.json
-cmd/addr/queries.go
+cmd/clean/cleaner
+cmd/clean/*.json
+cmd/reconcile/*.csv
+cmd/reconcile/*.json
+cmd/reconcile/queries.go
 launch.json
