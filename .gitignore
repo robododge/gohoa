@@ -1,0 +1,6 @@
+cmd/clean/cleaner
+cmd/clean/*.json
+cmd/reconcile/*.csv
+cmd/reconcile/*.json
+cmd/reconcile/queries.go
+launch.json
