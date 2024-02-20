@@ -1,6 +1,11 @@
 cmd/clean/cleaner
 cmd/clean/*.json
+cmd/clean/datadir/*
 cmd/reconcile/*.csv
 cmd/reconcile/*.json
 cmd/reconcile/queries.go
 launch.json
+slim_members.json
+slim_members.json*
+*slim_members.json
+.env.local

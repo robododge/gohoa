@@ -5,7 +5,10 @@ package main
 //  the pointer value for every entrie's value in the map
 //https://go.dev/play/p/fVvLHbw99UD
 
-import "fmt"
+import (
+	"fmt"
+	"time"
+)
 
 type Subscriber struct {
 	Name    string
@@ -95,5 +98,53 @@ func main() {
 
 	s := myDB.(*subMapDB)
 	s.PrintPtrs()
+
+	fmt.Print("Playing with select on channels\n")
+	playWithSelectOnChannels()
+
+}
+
+func playWithSelectOnChannels() {
+
+	var chan1 = make(chan int)
+	var chan2 = make(chan int)
+	var chan3 = make(chan string, 1)
+	var chan4 = make(chan string, 1)
+
+	go channelWatcher(chan1, chan2, chan3, chan4)
+
+	go func() {
+		time.Sleep(1 * time.Second)
+		chan3 <- "hello"
+	}()
+
+	for i := 0; i < 10; i++ {
+		chan2 <- i
+		if i%2 == 0 {
+			chan1 <- i
+		}
+	}
+	out := <-chan4
+
+	fmt.Printf("\nDone: %s\n", out)
+}
+
+func channelWatcher(chan1, chan2 chan int, chan3 chan string, chan4 chan<- string) {
+
+	for {
+		select {
+		case <-time.Tick(1 * time.Second):
+			fmt.Println("-- tick is done")
+			chan4 <- "done-tick"
+		case v1 := <-chan1:
+			fmt.Printf("chan1: %d\n", v1)
+		case v2 := <-chan2:
+			fmt.Printf("chan2: %d\n", v2)
+		case res := <-chan3:
+			fmt.Printf("chan3 string result: %s\n", res)
+			chan4 <- "done-chan3"
+		}
+
+	}
 
 }
