@@ -50,6 +50,7 @@ type MemberDB interface {
 	Add(key Mkey, member *Member)
 	AddConvience(member *Member)
 	Size() int
+	AllMembers() []Member
 }
 
 type memberMapDB struct {

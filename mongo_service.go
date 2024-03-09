@@ -9,18 +9,18 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-type DbService struct {
+type DBService struct {
 	client     *mongo.Client
 	mailboxDB  *mongo.Database
 	collection *mongo.Collection
 }
 
-func createDbService(collectionName string) DbService {
+func createDBService(collectionName string) DBService {
 	config := GetConfig()
-	uri := config.MongoDbUrl
-	dbName := config.MongoDbName
+	uri := config.MongoDBUrl
+	dbName := config.MongoDBName
 
-	ml := DbService{}
+	ml := DBService{}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 

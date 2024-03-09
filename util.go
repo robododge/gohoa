@@ -1,6 +1,8 @@
 package gohoa
 
 import (
+	"errors"
+	"fmt"
 	"slices"
 	"strings"
 )
@@ -73,3 +75,48 @@ func segmentTransformer(seg string) string {
 func (a ByStreetNumber) Len() int           { return len(a) }
 func (a ByStreetNumber) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a ByStreetNumber) Less(i, j int) bool { return a[i].StreetNumber < a[j].StreetNumber }
+
+// Translate streets into 3 character identifiers
+
+func getStreetID(street string) string {
+	switch street {
+	case "street":
+		return "st."
+	case "court":
+		return "ct."
+	case "drive":
+		return "dr."
+	case "circle":
+		return "cir."
+	case "trail":
+		return "trl."
+	case "way":
+		return "wy."
+	default:
+		return ""
+	}
+}
+
+type AddressParseError struct {
+	StreetNumber int
+	StreetName   string
+	Err          error
+}
+
+func (e *AddressParseError) Error() string {
+	return fmt.Sprintf("Could not use number: '%d' street: %s as address", e.StreetNumber, e.StreetName)
+}
+
+// String returns a human-readable error message.
+// func (e *AddressParseError) String() string {
+// 	return fmt.Sprintf("Could not use number: '%d' street: %s as address", e.StreetNumber, e.StreetName)
+// }
+
+func CreateMongoIDForDiretory(m *Member) (string, error) {
+	sName := GetShortIdFromStreetName(m.PAddress.StreetName)
+	if sName == "" || m.PAddress.Number == 0 {
+		return "", &AddressParseError{m.PAddress.Number, m.PAddress.StreetName, errors.New("address error")}
+	}
+	outId := fmt.Sprintf("%s-%d-%d", sName, m.PAddress.Number, m.MemberId)
+	return outId, nil
+}

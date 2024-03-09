@@ -8,9 +8,12 @@ import (
 )
 
 type MainConfig struct {
-	MongoDbUrl      string `config:"MONGODB_URI"`
-	MongoDbName     string `config:"MONGODB_NAME"`
-	SlimMembersJson string `config:"SLIM_MEMBERS_JSON"`
+	MongoDBUrl           string `config:"MONGODB_URI"`
+	MongoDBName          string `config:"MONGODB_NAME"`
+	SlimMembersJson      string `config:"SLIM_MEMBERS_JSON"`
+	SlimMembersJsonReval string `config:"SLIM_MEMBERS_JSON_REVAL"`
+
+	StreetsJson string `config:"STREETS_JSON"`
 }
 
 var (

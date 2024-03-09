@@ -11,12 +11,34 @@ import (
 )
 
 type DirQueryService struct {
-	DbService
+	DBService
 }
 
 func NewDirQueryService() *DirQueryService {
-	dbSvc := createDbService("directory")
+	dbSvc := createDBService("directory")
 	return &DirQueryService{dbSvc}
+}
+
+func (s *DirQueryService) FindAllMembers(members *[]Member) error {
+	ctx := context.TODO()
+	cursor, err := s.collection.Find(ctx, bson.D{})
+	if err != nil {
+		log.Println("Error finding all", err)
+		return err
+	}
+
+	defer cursor.Close(ctx)
+
+	for cursor.Next(ctx) {
+		var member Member
+		err := cursor.Decode(&member)
+		if err != nil {
+			log.Println("Error decoding member: ", err)
+			return err
+		}
+		*members = append(*members, member)
+	}
+	return nil
 }
 
 func (s *DirQueryService) FindMemberById(memberId int) (Member, error) {
