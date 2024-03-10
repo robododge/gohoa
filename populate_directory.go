@@ -2,6 +2,7 @@ package gohoa
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -48,15 +49,33 @@ func (s *DirLoaderService) RevalidateMongoFromJSON() {
 func populateAllMembersID(members []Member) []interface{} {
 	mi := make([]interface{}, 0, len(members))
 	for _, m := range members {
-		if newID, addrErr := CreateMongoIDForDiretory(&m); addrErr == nil {
-			m.ID = newID
-			mi = append(mi, m)
+
+		m2 := m //famous for range loop bug
+		if addrErr := populateMemberIDClean(&m2); addrErr == nil {
+			// if newID, shortSteetID, addrErr := CreateMongoIDForDiretory(&m); addrErr == nil {
+			// 	m.ID = newID
+			// 	m.PAddress.StreetNameShort = shortSteetID
+			// 	cleanStreetName := GetStreetMappingFromShortID(shortSteetID).FullName
+			// 	m.PAddress.StreetNameClean = fmt.Sprintf("%s %s", m.PAddress.Number, cleanStreetName)
+			mi = append(mi, m2)
 		} else {
 			log.Println("Error creating mongo id: ", addrErr)
 		}
 
 	}
 	return mi
+}
+
+func populateMemberIDClean(m *Member) error {
+	if newID, shortSteetID, addrErr := CreateMongoIDForDiretory(m); addrErr == nil {
+		m.ID = newID
+		m.PAddress.StreetNameShort = shortSteetID
+		cleanStreetName := GetStreetMappingFromShortID(shortSteetID).FullName
+		m.PAddress.StreetNameClean = fmt.Sprintf("%d %s", m.PAddress.Number, cleanStreetName)
+		return nil
+	} else {
+		return addrErr
+	}
 }
 
 func (s *DirLoaderService) BulkInsert(members []Member) error {
@@ -109,7 +128,7 @@ func (s *DirLoaderService) Revalidate(members []Member) error {
 		log.Printf("Phase 2, start revalidated %d members\n", res.ModifiedCount)
 		for i, m := range members {
 			m2 := m
-			if id, addrErr := CreateMongoIDForDiretory(&m2); addrErr == nil {
+			if id, _, addrErr := CreateMongoIDForDiretory(&m2); addrErr == nil {
 
 				// filter := bson.D{{"_id", id}}
 				update2 := bson.D{
@@ -125,14 +144,16 @@ func (s *DirLoaderService) Revalidate(members []Member) error {
 
 				if res.ModifiedCount == 0 {
 					log.Printf("Member %s at address %d %s, did not exist, inserting fresh !\n ", m2.MemberName, m2.PAddress.Number, m2.PAddress.StreetName)
-					m2.ID = id
-					res2, err := s.collection.InsertOne(sessCtx, m2)
-					if err != nil {
-						log.Println("Phase 2 error inserting members: ", err)
-						return res2, err
-					}
-					if res2.InsertedID != nil {
-						log.Printf("Inserted new member %s at address %d %s, id: %s\n", m2.MemberName, m2.PAddress.Number, m2.PAddress.StreetName, res2.InsertedID)
+					// m2.ID = id
+					if addrErr := populateMemberIDClean(&m2); addrErr == nil {
+						res2, err := s.collection.InsertOne(sessCtx, m2)
+						if err != nil {
+							log.Println("Phase 2 error inserting members: ", err)
+							return res2, err
+						}
+						if res2.InsertedID != nil {
+							log.Printf("Inserted new member %s at address %d %s, id: %s\n", m2.MemberName, m2.PAddress.Number, m2.PAddress.StreetName, res2.InsertedID)
+						}
 					}
 
 				}

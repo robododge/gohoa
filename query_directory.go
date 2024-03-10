@@ -8,6 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type DirQueryService struct {
@@ -39,6 +40,47 @@ func (s *DirQueryService) FindAllMembers(members *[]Member) error {
 		*members = append(*members, member)
 	}
 	return nil
+}
+
+func (s *DirQueryService) FindMembersByStreetNumber(number string) ([]PropertyAddress, error) {
+	// ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// defer cancel()
+	ctx := context.TODO()
+	regExStr := fmt.Sprintf("^[A-Z]{3}-%s", number)
+
+	// regExFilter := bson.E{Key: "_id", Value: bson.D{{"$regex", primitive.Regex{Pattern: regExtStr, Options: ""}}}}
+	// bson.E{Key:"bar", Value: bson.D{{"$regex", primitive.Regex{Pattern:"^ThisValue.*", Options:"i"}},
+
+	abandonFilter := bson.D{{"abandoned", bson.D{{"$exists", 0}}}}
+
+	regExFilter := bson.D{{"_id", bson.D{{"$regex", regExStr}}}}
+	logicalAndFilter := bson.D{
+		{"$and",
+			bson.A{
+				regExFilter,
+				abandonFilter,
+			},
+		},
+	}
+
+	projection := bson.D{{Key: "paddress", Value: 1}}
+	var addresses []PropertyAddress
+	cursor, err := s.collection.Find(ctx, logicalAndFilter, options.Find().SetProjection(projection))
+	if err != nil {
+		log.Println("Error finding members by street number: ", err)
+		return addresses, err
+	}
+	defer cursor.Close(ctx)
+	for cursor.Next(ctx) {
+		var member Member
+		err := cursor.Decode(&member)
+		if err != nil {
+			log.Println("Error decoding member: ", err)
+			return addresses, err
+		}
+		addresses = append(addresses, member.PAddress)
+	}
+	return addresses, nil
 }
 
 func (s *DirQueryService) FindMemberById(memberId int) (Member, error) {

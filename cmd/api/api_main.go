@@ -17,6 +17,8 @@ func main() {
 	apiController := NewApiController()
 	apiController.registerRoutes(r)
 
+	r.SetTrustedProxies(nil)
+
 	r.Run() // listen and serve on
 }
 
@@ -42,6 +44,7 @@ func NewApiController() *ApiController {
 func (ac *ApiController) registerRoutes(r *gin.Engine) {
 	r.GET("/suggest/streetnumber/:number", ac.suggestStreetNumber)
 	r.GET("/suggest/streetname/:name", ac.suggestStreetName)
+	r.GET("/suggest/streets_by_num/:number", ac.findMembersByStreetNumber)
 }
 
 func (ac *ApiController) suggestStreetNumber(c *gin.Context) {
@@ -58,6 +61,21 @@ func (ac *ApiController) suggestStreetName(c *gin.Context) {
 	ginH := gin.H{"response-type": "suggested street name"}
 	if name != "" {
 		ginH["data"] = ac.ml.SuggestStreetName(name)
+	}
+	c.JSON(http.StatusOK, ginH)
+}
+
+func (ac *ApiController) findMembersByStreetNumber(c *gin.Context) {
+	number := c.Param("number")
+	ginH := gin.H{"response-type": "members by street number"}
+	if number != "" {
+		if data, err := ac.ml.FindMembersByStreetNumber(number); err == nil {
+			ginH["data"] = data
+		} else {
+			ginH["error"] = err
+			c.JSON(http.StatusInternalServerError, ginH)
+			return
+		}
 	}
 	c.JSON(http.StatusOK, ginH)
 }

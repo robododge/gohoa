@@ -67,10 +67,10 @@ func LoadStreetMappingsJson() {
 	})
 }
 
-func GetShortIdFromStreetName(streetName string) string {
+func GetShortIDFromStreetName(streetName string) string {
 	return streetNameToID[streetName]
 }
-func GetStreetNameFromShortId(shortId string) StreetMapping {
+func GetStreetMappingFromShortID(shortId string) StreetMapping {
 	return shortIdToStreetMapping[shortId]
 }
 

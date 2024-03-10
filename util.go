@@ -112,11 +112,11 @@ func (e *AddressParseError) Error() string {
 // 	return fmt.Sprintf("Could not use number: '%d' street: %s as address", e.StreetNumber, e.StreetName)
 // }
 
-func CreateMongoIDForDiretory(m *Member) (string, error) {
-	sName := GetShortIdFromStreetName(m.PAddress.StreetName)
+func CreateMongoIDForDiretory(m *Member) (string, string, error) {
+	sName := GetShortIDFromStreetName(m.PAddress.StreetName)
 	if sName == "" || m.PAddress.Number == 0 {
-		return "", &AddressParseError{m.PAddress.Number, m.PAddress.StreetName, errors.New("address error")}
+		return "", sName, &AddressParseError{m.PAddress.Number, m.PAddress.StreetName, errors.New("address error")}
 	}
-	outId := fmt.Sprintf("%s-%d-%d", sName, m.PAddress.Number, m.MemberId)
-	return outId, nil
+	outID := fmt.Sprintf("%s-%d-%d", sName, m.PAddress.Number, m.MemberId)
+	return outID, sName, nil
 }

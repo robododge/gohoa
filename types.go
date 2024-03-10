@@ -7,10 +7,12 @@ type Contact struct {
 }
 
 type PropertyAddress struct {
-	AddressID  int    `json:"address_id,string"`
-	Addr1      string `json:"addr1"`
-	StreetName string `json:"StreetName"`
-	Number     int    `json:"Number"`
+	AddressID       int    `json:"address_id,string"`
+	Addr1           string `json:"addr1"`
+	StreetName      string `json:"StreetName"`
+	Number          int    `json:"Number"`
+	StreetNameShort string `json:"StreetNameShort"`
+	StreetNameClean string `json:"StreetNameClean"`
 }
 
 type Member struct {

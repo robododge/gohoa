@@ -61,3 +61,7 @@ func (ml *MemberLookup) SuggestStreetName(prefix string) []StreetMapping {
 func (ml *MemberLookup) SuggestNumber(prefix string) []string {
 	return ml.trieNum.Suggestions(prefix)
 }
+
+func (ml *MemberLookup) FindMembersByStreetNumber(number string) ([]PropertyAddress, error) {
+	return ml.dirQuerySvc.FindMembersByStreetNumber(number)
+}
