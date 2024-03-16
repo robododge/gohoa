@@ -33,6 +33,8 @@ RUN apk add --no-cache ca-certificates
 
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /app/server .
+COPY --from=builder /app/cmd/api/streets.json .
+COPY --from=builder /app/cmd/api/.env.production .
 
 # Run the web service on container startup.
 CMD ["/server"]

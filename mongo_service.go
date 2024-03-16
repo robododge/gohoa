@@ -20,6 +20,10 @@ func createDBService(collectionName string) DBService {
 	uri := config.MongoDBUrl
 	dbName := config.MongoDBName
 
+	uriShort := uri[40:]
+	log.Printf(" *--* Connecting to MongoDB: uri [%s]\n", uriShort)
+	log.Printf(" *--* Connecting to MongoDB: dbname [%s]\n", dbName)
+
 	ml := DBService{}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -27,16 +31,16 @@ func createDBService(collectionName string) DBService {
 	options.Client().ApplyURI(uri)
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(uri))
 	if err != nil {
-		log.Println("Error connecting to MongoDB: ", err)
+		log.Println("  !--! Error connecting to MongoDB: ", err)
 	}
 	ml.client = client
 
 	//quick ping
 	err = ml.client.Ping(ctx, nil)
 	if err != nil {
-		log.Println("Error pinging MongoDB: ", err)
+		log.Println(" !--! Error pinging MongoDB: ", err)
 	} else {
-		log.Println("Connected to MongoDB")
+		log.Println(" *--* Connected to MongoDB")
 	}
 
 	ml.mailboxDB = ml.client.Database(dbName)

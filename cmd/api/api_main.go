@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 
 	gin "github.com/gin-gonic/gin"
@@ -49,8 +50,11 @@ func (ac *ApiController) registerRoutes(r *gin.Engine) {
 
 func (ac *ApiController) suggestStreetNumber(c *gin.Context) {
 	number := c.Param("number")
+	log.Println("go STD log.. logging from GIN: suggestStreetNumber: ", number)
 	ginH := gin.H{"response-type": "suggested street number"}
 	if number != "" {
+		streetNumbers := ac.ml.SuggestNumber(number)
+		log.Printf("Suggested street numbers for %s: len(%d)\n", number, len(streetNumbers))
 		ginH["data"] = ac.ml.SuggestNumber(number)
 	}
 	c.JSON(http.StatusOK, ginH)

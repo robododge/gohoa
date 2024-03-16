@@ -13,3 +13,6 @@ cmd/dbloader/slim_members_reval.json
 cmd/dbloader/streets.json
 mongo-playground/playground-1.mongodb.js
 cmd/api/streets.json
+cmd/api/.env.production
+cmd/api/junk
+cmd/api/junk.md
