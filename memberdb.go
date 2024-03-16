@@ -50,6 +50,14 @@ func (mdb *memberMapDB) Size() int {
 	return len(mdb.mm)
 }
 
+func (mdb *memberMapDB) AllMembers() []Member {
+	members := make([]Member, 0, len(mdb.mm))
+	for _, member := range mdb.mm {
+		members = append(members, *member)
+	}
+	return members
+}
+
 // getAllMKeys is a backdoor getting all the keys in the map
 func (mdb *memberMapDB) getAllMKeys() []Mkey {
 	keys := make([]Mkey, 0, len(mdb.mm))

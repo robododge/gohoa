@@ -7,14 +7,21 @@ type Contact struct {
 }
 
 type PropertyAddress struct {
-	Addr1      string `json:"addr1"`
-	StreetName string `json:"StreetName"`
-	Number     int    `json:"Number"`
+	AddressID       int    `json:"address_id,string"`
+	Addr1           string `json:"addr1"`
+	StreetName      string `json:"StreetName"`
+	Number          int    `json:"Number"`
+	StreetNameShort string `json:"StreetNameShort"`
+	StreetNameClean string `json:"StreetNameClean"`
 }
 
 type Member struct {
-	PAddress PropertyAddress `json:"prop_address"`
-	Contacts []Contact       `json:"contact"`
+	ID         string          `json:"_id,omitempty" bson:"_id"`
+	MemberId   int32           `json:"member_id,string"`
+	MemberName string          `json:"member_name"`
+	OrderId    int32           `json:"order_id,string"`
+	PAddress   PropertyAddress `json:"prop_address"`
+	Contacts   []Contact       `json:"contact"`
 }
 
 type AllMembers struct {
@@ -45,6 +52,7 @@ type MemberDB interface {
 	Add(key Mkey, member *Member)
 	AddConvience(member *Member)
 	Size() int
+	AllMembers() []Member
 }
 
 type memberMapDB struct {

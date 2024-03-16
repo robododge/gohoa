@@ -67,3 +67,25 @@ func (am *AllMembers) PopulateFromJsonFile(filename string) {
 	am.Members = members
 
 }
+
+func (am *AllMembers) DeDupeMembers() {
+	//Read all members into the in-memory holder
+	inMemoryDB := NewMemberDB()
+	for _, m := range am.Members {
+		m2 := m
+		if memFound, found := inMemoryDB.Fetch(MakeKey(&m2)); !found {
+			inMemoryDB.AddConvience(&m2)
+		} else {
+			log.Printf("OOPS! -Duplicate member existing %s id:%d :: new member %s id:%d\n", memFound.MemberName, memFound.MemberId, m2.MemberName, m2.MemberId)
+			log.Printf(" -- address: %d %s", m2.PAddress.Number, m2.PAddress.StreetName)
+			if memFound.MemberId > m.MemberId {
+				log.Printf(" - Keeping member found %s id:%d\n", memFound.MemberName, memFound.MemberId)
+			} else {
+				log.Printf(" - Keeping new member %s id:%d\n", m2.MemberName, m2.MemberId)
+				inMemoryDB.AddConvience(&m2)
+			}
+		}
+	}
+	am.Members = inMemoryDB.AllMembers()
+
+}
