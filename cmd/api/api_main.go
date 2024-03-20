@@ -35,17 +35,20 @@ func pongRespond(c *gin.Context) {
 
 type ApiController struct {
 	ml *gohoa.MemberLookup
+	cr *gohoa.ContactReqService
 }
 
 func NewApiController() *ApiController {
 	memberLookup := gohoa.NewMemberLookup()
-	return &ApiController{memberLookup}
+	contactReqSvc := gohoa.NewContactReqService()
+	return &ApiController{memberLookup, contactReqSvc}
 }
 
 func (ac *ApiController) registerRoutes(r *gin.Engine) {
 	r.GET("/suggest/streetnumber/:number", ac.suggestStreetNumber)
 	r.GET("/suggest/streetname/:name", ac.suggestStreetName)
 	r.GET("/suggest/streets_by_num/:number", ac.findMembersByStreetNumber)
+	r.POST("/contact/request", ac.createContactRequest)
 }
 
 func (ac *ApiController) suggestStreetNumber(c *gin.Context) {
@@ -82,4 +85,19 @@ func (ac *ApiController) findMembersByStreetNumber(c *gin.Context) {
 		}
 	}
 	c.JSON(http.StatusOK, ginH)
+}
+
+func (ac *ApiController) createContactRequest(c *gin.Context) {
+	var contactReq gohoa.ContactRequest
+	if err := c.BindJSON(&contactReq); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	log.Printf("Contact request: %+v\n", contactReq)
+	err := ac.cr.CreateContactRequest(contactReq)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.IndentedJSON(http.StatusCreated, gin.H{"message": "Contact request received"})
 }

@@ -1,5 +1,9 @@
 package gohoa
 
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
+
 type Contact struct {
 	RoleName  string `json:"role_name"`
 	FirstName string `json:"fname"`
@@ -22,6 +26,19 @@ type Member struct {
 	OrderId    int32           `json:"order_id,string"`
 	PAddress   PropertyAddress `json:"prop_address"`
 	Contacts   []Contact       `json:"contact"`
+}
+
+type ContactRequest struct {
+	ID            string             `json:"_id,omitempty" bson:"_id"`
+	Type          string             `json:"omitempty" bson:"type"` //'contact',
+	CreateDate    primitive.DateTime `json:"" bson:"createDate"`    //'2020-12-01T00:00:00Z',
+	FirstName     string             `json:"firstName"`             //'Pieter',
+	LastName      string             `json:"lastName"`              //'Debrie',
+	Email         string             `json:"email"`                 //'pd@robododge.com',
+	StreetNumber  int                `json:"streetNumber"`          // 123,
+	StreetName    string             `json:"streetName"`            //'Arraks St',
+	ContactReason string             `json:"contactReason"`         //'interest',
+	Describe      string             `json:"describe,omitempty"`    //'I am interested in the HOA',
 }
 
 type AllMembers struct {
