@@ -25,9 +25,13 @@ func Test_memberMapDB_AddConvience(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			mdb := &memberMapDB{
-				mm: tt.fields.mm,
-			}
+			// mdb := &memberMapDB{
+			// 	mm: tt.fields.mm,
+			// }
+
+			mdb := NewMemberDB()
+			mdb.(*memberMapDB).mm = tt.fields.mm
+
 			mdb.AddConvience(tt.args.member)
 
 			mOut, found := mdb.Fetch(MakeKey(tt.args.member))

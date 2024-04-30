@@ -130,7 +130,7 @@ func TestTrie_NumberSuggestions(t *testing.T) {
 		},
 		{
 			name:       "Test suggestions for '561'",
-			key:        "56",
+			key:        "561",
 			wantResult: []string{"5611", "5612"},
 		},
 	}

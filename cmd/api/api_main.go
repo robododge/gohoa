@@ -15,12 +15,17 @@ func main() {
 	r.GET("/ping/:aname", pongRespond)
 	r.GET("/ping", pongRespond)
 
-	apiController := NewApiController()
+	apiController := NewAPIController()
 	apiController.registerRoutes(r)
 
-	r.SetTrustedProxies(nil)
+	if err := r.SetTrustedProxies(nil); err != nil {
+		log.Fatal("something wrong with trusted proxi setting!", err)
+	}
 
-	r.Run() // listen and serve on
+	err := r.Run() // listen and serve on
+	if err != nil {
+		log.Fatal(err)
+	}
 }
 
 func pongRespond(c *gin.Context) {
@@ -33,25 +38,25 @@ func pongRespond(c *gin.Context) {
 	c.JSON(http.StatusOK, ginH)
 }
 
-type ApiController struct {
+type APIController struct {
 	ml *gohoa.MemberLookup
 	cr *gohoa.ContactReqService
 }
 
-func NewApiController() *ApiController {
+func NewAPIController() *APIController {
 	memberLookup := gohoa.NewMemberLookup()
 	contactReqSvc := gohoa.NewContactReqService()
-	return &ApiController{memberLookup, contactReqSvc}
+	return &APIController{memberLookup, contactReqSvc}
 }
 
-func (ac *ApiController) registerRoutes(r *gin.Engine) {
+func (ac *APIController) registerRoutes(r *gin.Engine) {
 	r.GET("/suggest/streetnumber/:number", ac.suggestStreetNumber)
 	r.GET("/suggest/streetname/:name", ac.suggestStreetName)
 	r.GET("/suggest/streets_by_num/:number", ac.findMembersByStreetNumber)
 	r.POST("/contact/request", ac.createContactRequest)
 }
 
-func (ac *ApiController) suggestStreetNumber(c *gin.Context) {
+func (ac *APIController) suggestStreetNumber(c *gin.Context) {
 	number := c.Param("number")
 	log.Println("go STD log.. logging from GIN: suggestStreetNumber: ", number)
 	ginH := gin.H{"response-type": "suggested street number"}
@@ -63,7 +68,7 @@ func (ac *ApiController) suggestStreetNumber(c *gin.Context) {
 	c.JSON(http.StatusOK, ginH)
 }
 
-func (ac *ApiController) suggestStreetName(c *gin.Context) {
+func (ac *APIController) suggestStreetName(c *gin.Context) {
 	name := c.Param("name")
 	ginH := gin.H{"response-type": "suggested street name"}
 	if name != "" {
@@ -72,7 +77,7 @@ func (ac *ApiController) suggestStreetName(c *gin.Context) {
 	c.JSON(http.StatusOK, ginH)
 }
 
-func (ac *ApiController) findMembersByStreetNumber(c *gin.Context) {
+func (ac *APIController) findMembersByStreetNumber(c *gin.Context) {
 	number := c.Param("number")
 	ginH := gin.H{"response-type": "members by street number"}
 	if number != "" {
@@ -87,7 +92,7 @@ func (ac *ApiController) findMembersByStreetNumber(c *gin.Context) {
 	c.JSON(http.StatusOK, ginH)
 }
 
-func (ac *ApiController) createContactRequest(c *gin.Context) {
+func (ac *APIController) createContactRequest(c *gin.Context) {
 	var contactReq gohoa.ContactRequest
 	if err := c.BindJSON(&contactReq); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
